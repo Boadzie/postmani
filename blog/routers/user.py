@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from .. import schemas, models, database
 from blog.hashing import Hash
 from ..crud.user import create, get_one
+from ..oauth2 import get_current_user
 
 router = APIRouter(
  tags=["users"]
@@ -12,7 +13,7 @@ router = APIRouter(
 
 # create a user
 @router.post("/user", response_model=schemas.ShowUser)
-def create_user(request: schemas.User, db: Session=Depends(database.get_db)):
+def create_user(request: schemas.User, db: Session=Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
     return create(request, db)
 
 # # get all users
@@ -23,7 +24,7 @@ def create_user(request: schemas.User, db: Session=Depends(database.get_db)):
 
 # get a user
 @router.get("/user/{id}", response_model=schemas.ShowUser)
-def get_user(id: int, db: Session=Depends(database.get_db)):
+def get_user(id: int, db: Session=Depends(database.get_db), current_user: schemas.User = Depends(get_current_user)):
     return get_one(id, db)
 
 # # update a user
