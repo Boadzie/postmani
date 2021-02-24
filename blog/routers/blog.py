@@ -2,54 +2,38 @@ from typing import List
 from fastapi import APIRouter, Depends, status, Response, HTTPException
 from sqlalchemy.orm import Session
 from .. import schemas, models, database
+from blog.crud.blog import get_all, create, get_one, update_one, destroy_one
 
 
 router = APIRouter(
-
+    tags=['blogs']
 )
 
 # create a blog
-@router.post("/blog", status_code=status.HTTP_201_CREATED, tags=["blogs"])
-def blog(request: schemas.Blog, db: Session = Depends(database.get_db)):
-    new_post =  models.Blog(title=request.title, body=request.body, user_id=1)
-    db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
-    return new_post
+@router.post("/blog", status_code=status.HTTP_201_CREATED)
+def create_blog(request: schemas.Blog, db: Session = Depends(database.get_db)):
+    return create(request, db)
 
 # get all blogs
-@router.get("/blogs", response_model=List[schemas.ShowBlog], tags=["blogs"])
+@router.get("/blogs", response_model=List[schemas.ShowBlog])
 def get_blogs(db: Session=Depends(database.get_db)):
-    blogs = db.query(models.Blog).all()
-    return  blogs
+    return get_all(db)
+
 
 # get a blog
-@router.get("/blog/{id}", response_model=schemas.ShowBlog, tags=["blogs"])
+@router.get("/blog/{id}", response_model=schemas.ShowBlog)
 def get_blog(id, response: Response, db: Session=Depends(database.get_db)):
-    blog = db.query(models.Blog).filter(models.Blog.id==id).first()
-    if not blog:
-        raise HTTPException(status_code=404, detail=f"Blog with id {id} is not found!")
-    return blog
+    return get_one(id, response, db)
 
 # update a blog
-@router.put("/blog/{id}", status_code=status.HTTP_202_ACCEPTED, tags=["blogs"])
+@router.put("/blog/{id}", status_code=status.HTTP_202_ACCEPTED)
 def update_blog(id, request: schemas.Blog, db: Session=Depends(database.get_db)):
-    blog = db.query(models.Blog).filter(models.Blog.id == id)
-    if not blog.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} is not found!")
-    blog.update(request)
-    db.commit()
-    return f"Post with id {id} Updated!"
+    return update_one(id, request, db)
 
 
 # delete a blog
-@router.delete("/blog/{id}", status_code=status.HTTP_204_NO_CONTENT, tags=["blogs"])
+@router.delete("/blog/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_blog(id, db: Session=Depends(database.get_db)):
-    blog = db.query(models.Blog).filter(models.Blog.id == id)
-    if not blog.first():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {id} is not found!")
-    blog.delete()
-    db.commit()
-    return "Post with id {id} deleted!"
+    return destroy_one(id, db)
 
 
