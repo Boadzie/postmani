@@ -1,5 +1,7 @@
 # Postmani!
 
+![Postmani](./Postmani.gif)
+
 User and Post API using FastAPI
 
 
